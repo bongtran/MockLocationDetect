@@ -2,6 +2,7 @@ package com.bongtran.mocklocationchecker;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -48,12 +49,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }else {
             setPermissions();
         }
-//        try {
-//            Log.d(TAG, "Removing Test providers");
-//            lm.removeTestProvider(LocationManager.GPS_PROVIDER);
-//        } catch (IllegalArgumentException error) {
-//            Log.d(TAG, "Got exception in removing test  provider");
-//        }
+        try {
+            Log.d(TAG, "Removing Test providers");
+            lm.removeTestProvider(LocationManager.GPS_PROVIDER);
+        } catch (IllegalArgumentException error) {
+            Log.d(TAG, "Got exception in removing test  provider");
+        }
         boolean isMock = isMockSettingsON(this);
 
         boolean mockApp = areThereMockPermissionApps(this);
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             return true;
     }
 
-    public static boolean areThereMockPermissionApps(Context context) {
+    public boolean areThereMockPermissionApps(Context context) {
         int count = 0;
 
         PackageManager pm = context.getPackageManager();
@@ -97,6 +98,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 .equals("android.permission.ACCESS_MOCK_LOCATION")
                                 && !applicationInfo.packageName.equals(context.getPackageName())) {
                             count++;
+                            Log.d("MOCKED APP: ",applicationInfo.packageName);
+                            isAppRunning(MainActivity.this, applicationInfo.packageName);
                         }
                     }
                 }
@@ -110,11 +113,27 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return false;
     }
 
+    public boolean isAppRunning(final Context context, final String packageName) {
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> runningAppProcessInfo = am.getRunningAppProcesses();
+
+        for (int i = 0; i < runningAppProcessInfo.size(); i++) {
+//            Log.d("RUNNING APP: ",runningAppProcessInfo.get(i).processName);
+            if(runningAppProcessInfo.get(i).processName.equals(packageName)) {
+                Log.d("FOUND RUNNING APP: ", packageName);
+            }
+        }
+        return false;
+    }
+
     @Override
     public void onLocationChanged(Location location) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            location.isFromMockProvider();
-            txtMockedLocation.setText("FROM MOCKED LOCATION");
+            String locationString = location.getLatitude() + " " + location.getLongitude();
+            if(location.isFromMockProvider())
+                locationString += "FROM MOCKED LOCATION";
+
+            txtMockedLocation.setText(locationString);
         }
     }
 
