@@ -39,15 +39,16 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements LocationListener, View.OnClickListener,  GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+public class MainActivity extends AppCompatActivity implements LocationListener, View.OnClickListener, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
     private static final int LOCATION_MODE_HIGH_ACCURACY = 1;
-    private TextView txtVersion, txtMocked, txtMockedApp, txtMockedLocation;
+    private TextView txtVersion, txtMocked, txtMockedApp, txtMockedLocation, txtMockedStatus;
     private boolean mockLocationsEnabled;
     private String TAG = "MOCKING CHECK";
     LocationManager lm;
     int numGoodReadings = 0;
     Location lastMockLocation;
+
     @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,17 +59,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         txtVersion = findViewById(R.id.txtVersion);
         txtMockedApp = findViewById(R.id.txtMockedApp);
         txtMockedLocation = findViewById(R.id.txtMockedLocation);
-
+        txtMockedStatus = findViewById(R.id.txtMockedStatus);
         findViewById(R.id.btnSetting).setOnClickListener(this);
 
         txtVersion.setText("API Version " + Build.VERSION.CODENAME + " " + Build.VERSION.SDK_INT);
         lm = (LocationManager) getSystemService(LOCATION_SERVICE);
 
 
-
-        if(checkPermissions()){
+        if (checkPermissions()) {
             lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
-        }else {
+        } else {
             setPermissions();
         }
         try {
@@ -81,11 +81,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
         boolean mockApp = areThereMockPermissionApps(this);
 
-        if(isMock){
+        if (isMock) {
             txtMocked.setText("HAS MOCKED SETTING");
         }
 
-        if(mockApp){
+        if (mockApp) {
             txtMockedApp.setText("HAS MOCKED APP");
         }
     }
@@ -120,13 +120,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                                 .equals("android.permission.ACCESS_MOCK_LOCATION")
                                 && !applicationInfo.packageName.equals(context.getPackageName())) {
                             count++;
-                            Log.d("MOCKED APP: ",applicationInfo.packageName);
+                            Log.d("MOCKED APP: ", applicationInfo.packageName);
                             isAppRunning(MainActivity.this, applicationInfo.packageName);
                         }
                     }
                 }
             } catch (PackageManager.NameNotFoundException e) {
-                Log.e("Got exception " , e.getMessage());
+                Log.e("Got exception ", e.getMessage());
             }
         }
 
@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
         for (int i = 0; i < runningAppProcessInfo.size(); i++) {
 //            Log.d("RUNNING APP: ",runningAppProcessInfo.get(i).processName);
-            if(runningAppProcessInfo.get(i).processName.equals(packageName)) {
+            if (runningAppProcessInfo.get(i).processName.equals(packageName)) {
                 Log.d("FOUND RUNNING APP: ", packageName);
             }
         }
@@ -152,8 +152,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     public void onLocationChanged(Location location) {
         boolean plausible = isLocationPlausible(location);
 
+        String loc = "Lat: " + location.getLatitude() + " lng: " + location.getLongitude();
+        txtMockedLocation.setText(loc);
         if (!plausible) {
-            txtMockedLocation.setText("MOCKED LOCATION");
+            txtMockedStatus.setText("MOCKED LOCATION");
+        } else {
+            txtMockedStatus.setText("NORMAL");
         }
     }
 
@@ -182,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 //        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
 //            return false;
 //        } else
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return false;
         } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return false;
@@ -249,12 +253,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     @Override
     public void onClick(View view) {
         int id = view.getId();
-        switch (id){
+        switch (id) {
             case R.id.btnSetting:
                 startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                 break;
-                default:
-                    break;
+            default:
+                break;
         }
     }
 
@@ -293,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         return (d > 1000);
     }
 
-    private void showNetworkSetting(){
+    private void showNetworkSetting() {
 //        GoogleApiClient mGoogleApiClient;
 //        LocationRequest mLocationRequest;
 //
